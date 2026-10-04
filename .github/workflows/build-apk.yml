@@ -1,4 +1,3 @@
-
 name: Build Teto Pet APK
 
 on:
@@ -16,11 +15,21 @@ jobs:
       - name: Get source
         uses: actions/checkout@v4
 
-      - name: Extract project
+      - name: Find and extract project
         run: |
-          mkdir -p /tmp/teto
-          unzip -q Tetopetmobile-source.zip -d /tmp/teto
-          cp -r /tmp/teto/. .
+          echo "Archivos recibidos por GitHub:"
+          find . -maxdepth 4 -type f
+          ZIP="$(find . -type f -iname 'tetopetmobile-source.zip' -print -quit)"
+          if [ -n "$ZIP" ]; then
+            mkdir -p /tmp/teto
+            unzip -q "$ZIP" -d /tmp/teto
+            cp -r /tmp/teto/TetoPetMobile/. . 2>/dev/null || cp -r /tmp/teto/. .
+          else
+            echo "No se encontró el ZIP. Se usarán los archivos subidos directamente."
+          fi
+          test -f settings.gradle
+          test -f app/build.gradle
+          test -f app/src/main/AndroidManifest.xml
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -41,3 +50,4 @@ jobs:
         with:
           name: TetoPetMobile-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+          
